@@ -1,0 +1,29 @@
+<%# _bottom_nav.ejs — Mobile bottom navigation bar %>
+<nav id="bottom-nav"
+  class="absolute bottom-0 left-0 right-0 h-[72px] bg-cream-50/95 backdrop-blur-xl border-t border-cream-200 flex items-center justify-around px-2 pb-2 z-50 lg:hidden"
+  style="display:none!important">
+  <button class="nav-item flex flex-col items-center gap-1 px-4 py-2 border-none bg-transparent cursor-pointer" data-view="home" onclick="State.navigate('home')">
+    <div class="nav-icon-wrap w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200">
+      <svg class="nav-icon w-5 h-5 transition-all" style="color:rgba(176,125,50,0.4)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <span class="nav-label text-[10px] font-medium transition-all" style="color:rgba(176,125,50,0.4)">Home</span>
+  </button>
+  <button class="nav-item flex flex-col items-center gap-1 px-4 py-2 border-none bg-transparent cursor-pointer" data-view="books" onclick="State.navigate('books')">
+    <div class="nav-icon-wrap w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200">
+      <svg class="nav-icon w-5 h-5 transition-all" style="color:rgba(176,125,50,0.4)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    </div>
+    <span class="nav-label text-[10px] font-medium transition-all" style="color:rgba(176,125,50,0.4)">Books</span>
+  </button>
+  <button class="nav-item flex flex-col items-center gap-1 px-4 py-2 border-none bg-transparent cursor-pointer" data-view="favorites" onclick="State.navigate('favorites')">
+    <div class="nav-icon-wrap w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200">
+      <svg class="nav-icon w-5 h-5 transition-all" style="color:rgba(176,125,50,0.4)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+    </div>
+    <span class="nav-label text-[10px] font-medium transition-all" style="color:rgba(176,125,50,0.4)">Saved</span>
+  </button>
+  <button class="nav-item flex flex-col items-center gap-1 px-4 py-2 border-none bg-transparent cursor-pointer" data-view="profile" onclick="State.navigate('profile')">
+    <div class="nav-icon-wrap w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200">
+      <svg class="nav-icon w-5 h-5 transition-all" style="color:rgba(176,125,50,0.4)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <span class="nav-label text-[10px] font-medium transition-all" style="color:rgba(176,125,50,0.4)">Profile</span>
+  </button>
+</nav>

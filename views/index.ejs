@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Folio: Your Reading Life</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="icon" type="image/x-icon" href="./images/favicon.png">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          cream: { 50:'#fdf8f0', 100:'#f5ead8', 200:'#e8d5b7', 300:'#d4b896' },
+          amber: { 400:'#c8974a', 500:'#b07d32', 600:'#8b5e1a' },
+          brown: { 700:'#5c3d1e', 800:'#3d2610', 900:'#1e1208' },
+        },
+        fontFamily: {
+          display: ['"Playfair Display"', 'serif'],
+          body:    ['"DM Sans"', 'sans-serif'],
+        },
+        boxShadow: {
+          warm: '0 4px 24px rgba(92,61,30,0.12)',
+          book: '-4px 4px 0 rgba(92,61,30,0.2), 0 4px 24px rgba(92,61,30,0.12)',
+          glow: '0 0 20px rgba(200,151,74,0.4)',
+        },
+      }
+    }
+  }
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
+  .no-scroll { scrollbar-width: none; }
+  .no-scroll::-webkit-scrollbar { display: none; }
+  input, textarea { user-select: text; -webkit-user-select: text; }
+
+  @keyframes bookRise {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  @keyframes shimmer {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+  }
+  .book-spine { animation: bookRise 1.2s cubic-bezier(0.34,1.3,0.64,1) both; }
+
+  /* Screen transitions */
+  .screen { transition: opacity 0.28s ease, transform 0.28s ease; }
+  .screen.active { opacity:1!important; transform:translateY(0)!important; pointer-events:all!important; }
+
+  /* Modal */
+  .modal-overlay { transition: opacity 0.3s ease; }
+  .modal-overlay.open { opacity:1!important; pointer-events:all!important; }
+  .modal-overlay.open .modal-sheet { transform: translateY(0)!important; }
+  .modal-sheet { transition: transform 0.32s cubic-bezier(0.25,0.46,0.45,0.94); }
+
+  /* Progress shimmer */
+  .progress-fill { position: relative; overflow: hidden; }
+  .progress-fill::after {
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    animation: shimmer 2.4s infinite;
+  }
+
+  /* Grain texture */
+  .grain::before {
+    content:''; position:absolute; inset:0; pointer-events:none; z-index:5; opacity:0.4; border-radius:inherit;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+</style>
+</head>
+<body class="bg-brown-900 overflow-hidden h-screen w-screen">
+
+<!-- ═══════════════════════════════════════════════════════
+     APP SHELL: sidebar on desktop, bottom nav on mobile
+════════════════════════════════════════════════════════════ -->
+<div id="app" class="flex h-screen w-screen overflow-hidden bg-cream-50">
+
+  <!-- ─── DESKTOP SIDEBAR ────────────────────────────── -->
+  <aside id="sidebar" class="hidden flex-col w-60 xl:w-64 shrink-0 bg-brown-900 h-full z-50 relative grain">
+    <div class="px-7 pt-10 pb-7 border-b border-white/5">
+      <div class="font-display text-3xl font-bold text-cream-50 tracking-tight">Folio</div>
+      <div class="text-[10px] text-amber-400 tracking-[3px] uppercase mt-1 font-semibold opacity-80">Reading Dashboard</div>
+    </div>
+
+    <nav class="flex-1 px-3 py-5 flex flex-col gap-0.5" id="sidebar-nav">
+      <button data-view="home" onclick="State.navigate('home')"
+        class="sidebar-item flex items-center gap-3 px-3.5 py-3 rounded-xl text-left w-full transition-all duration-200 text-cream-100/40 hover:text-cream-100/70 hover:bg-white/5">
+        <div class="sidebar-icon w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 shrink-0">
+          <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <span class="text-sm font-medium">Home</span>
+      </button>
+      <button data-view="books" onclick="State.navigate('books')"
+        class="sidebar-item flex items-center gap-3 px-3.5 py-3 rounded-xl text-left w-full transition-all duration-200 text-cream-100/40 hover:text-cream-100/70 hover:bg-white/5">
+        <div class="sidebar-icon w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 shrink-0">
+          <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
+        <span class="text-sm font-medium">Library</span>
+      </button>
+      <button data-view="favorites" onclick="State.navigate('favorites')"
+        class="sidebar-item flex items-center gap-3 px-3.5 py-3 rounded-xl text-left w-full transition-all duration-200 text-cream-100/40 hover:text-cream-100/70 hover:bg-white/5">
+        <div class="sidebar-icon w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 shrink-0">
+          <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <span class="text-sm font-medium">Favorites</span>
+      </button>
+      <button data-view="profile" onclick="State.navigate('profile')"
+        class="sidebar-item flex items-center gap-3 px-3.5 py-3 rounded-xl text-left w-full transition-all duration-200 text-cream-100/40 hover:text-cream-100/70 hover:bg-white/5">
+        <div class="sidebar-icon w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 shrink-0">
+          <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <span class="text-sm font-medium">Profile</span>
+      </button>
+    </nav>
+
+    <div id="sidebar-user" class="px-3 pb-7 hidden">
+      <div class="bg-brown-800 rounded-2xl p-3.5 flex items-center gap-3">
+        <div id="sidebar-avatar" class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center font-display font-bold text-brown-900 text-lg shrink-0">R</div>
+        <div class="min-w-0">
+          <p id="sidebar-name"  class="text-cream-50 text-sm font-semibold truncate">Reader</p>
+          <p id="sidebar-email" class="text-cream-300/50 text-xs truncate">reader@folio.app</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── MAIN AREA ───────────────────────────────────── -->
+  <main class="flex-1 flex flex-col h-full min-w-0 relative overflow-hidden">
+
+    <!-- ╔═══════════════════════════════════╗
+         ║  SCREEN: HERO                     ║
+         ╚═══════════════════════════════════╝ -->
+    <div id="screen-hero" class="screen active absolute inset-0 bg-brown-900 overflow-hidden" style="opacity:1;transform:translateY(0);pointer-events:all">
+      <!-- BG gradients -->
+      <div class="absolute inset-0 bg-gradient-to-br from-brown-900 via-[#2a1508] to-brown-900 pointer-events-none"></div>
+      <div class="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-amber-400/8 to-transparent pointer-events-none"></div>
+      <div class="absolute -top-20 -left-20 w-96 h-96 rounded-full bg-amber-400/5 blur-3xl pointer-events-none"></div>
+
+      <!-- Book spines -->
+      <div class="absolute bottom-0 left-0 right-0 h-[58%] flex items-end justify-center gap-1.5 px-8 overflow-hidden pointer-events-none" aria-hidden="true">
+        <div class="book-spine w-7 rounded-t bg-gradient-to-b from-amber-600 to-brown-700" style="height:52%;animation-delay:.10s"></div>
+        <div class="book-spine w-5 rounded-t bg-gradient-to-b from-amber-400 to-amber-600" style="height:68%;animation-delay:.16s"></div>
+        <div class="book-spine w-8 rounded-t bg-gradient-to-b from-brown-700 to-brown-800" style="height:48%;animation-delay:.22s"></div>
+        <div class="book-spine w-4 rounded-t bg-gradient-to-b from-amber-500 to-brown-700" style="height:74%;animation-delay:.06s"></div>
+        <div class="book-spine w-6 rounded-t bg-gradient-to-b from-brown-700 to-amber-500" style="height:60%;animation-delay:.28s"></div>
+        <div class="book-spine w-9 rounded-t bg-gradient-to-b from-brown-800 to-brown-700" style="height:50%;animation-delay:.12s"></div>
+        <div class="book-spine w-5 rounded-t bg-gradient-to-b from-amber-400 to-amber-500" style="height:72%;animation-delay:.18s"></div>
+        <div class="book-spine w-7 rounded-t bg-gradient-to-b from-brown-700 to-amber-600" style="height:56%;animation-delay:.24s"></div>
+        <div class="book-spine w-6 rounded-t bg-gradient-to-b from-amber-500 to-brown-700" style="height:64%;animation-delay:.08s"></div>
+        <div class="book-spine w-4 rounded-t bg-gradient-to-b from-brown-700 to-brown-800" style="height:46%;animation-delay:.30s"></div>
+        <div class="book-spine w-8 rounded-t bg-gradient-to-b from-amber-600 to-amber-400" style="height:70%;animation-delay:.14s"></div>
+        <div class="book-spine w-5 rounded-t bg-gradient-to-b from-brown-800 to-brown-700" style="height:54%;animation-delay:.20s"></div>
+      </div>
+      <!-- Fade over spines -->
+      <div class="absolute bottom-0 left-0 right-0 h-[58%] bg-gradient-to-t from-brown-900/95 via-brown-900/55 to-transparent pointer-events-none"></div>
+
+      <!-- Content -->
+      <div class="relative z-10 h-full flex flex-col px-8 lg:px-16 pt-20 lg:pt-24 pb-12 max-w-2xl">
+        <div class="flex items-center gap-2 bg-amber-400/10 border border-amber-400/20 rounded-full px-4 py-1.5 w-fit mb-8">
+          <svg class="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <span class="text-[11px] text-amber-400 font-semibold tracking-[2px] uppercase">Your reading life</span>
+        </div>
+        <h1 class="font-display text-5xl lg:text-7xl font-bold text-cream-50 leading-[1.04] mb-6">
+          Every great<br><em class="text-amber-400 not-italic font-bold">story</em> starts<br>here.
+        </h1>
+        <p class="text-cream-100/50 text-base lg:text-lg leading-relaxed mb-10 max-w-sm">
+          Track your reads, discover your next obsession, and build your personal library.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3 max-w-sm lg:max-w-md">
+          <button onclick="State.openModal('signup')"
+            class="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 text-brown-900 font-semibold text-[15px] py-4 px-8 rounded-2xl shadow-[0_8px_32px_rgba(200,151,74,0.35)] hover:shadow-[0_12px_40px_rgba(200,151,74,0.5)] active:scale-95 transition-all duration-150 flex-1">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Create your shelf
+          </button>
+          <button onclick="State.openModal('login')"
+            class="flex items-center justify-center gap-2 text-cream-200/70 font-medium text-sm py-4 px-8 rounded-2xl border border-white/15 hover:bg-white/5 active:scale-95 transition-all duration-150 flex-1">
+            Sign in
+          </button>
+        </div>
+        <p class="mt-auto text-cream-100/20 text-xs pt-8">No ads. No noise. Just books.</p>
+      </div>
+    </div>
+
+    <!-- ╔═══════════════════════════════════╗
+         ║  SCREEN: HOME                     ║
+         ╚═══════════════════════════════════╝ -->
+    <div id="screen-home" class="screen absolute inset-0 overflow-y-auto no-scroll bg-cream-50" style="opacity:0;transform:translateY(12px);pointer-events:none">
+      <!-- Sticky header -->
+      <div class="sticky top-0 z-10 px-6 lg:px-10 pt-12 lg:pt-8 pb-4 bg-gradient-to-b from-cream-100 via-cream-100/90 to-transparent">
+        <p id="greeting-time" class="text-xs font-bold tracking-[3px] uppercase text-amber-500 mb-1">Good morning</p>
+        <h1 id="greeting-name" class="font-display text-3xl lg:text-4xl font-bold text-brown-900">Welcome, <em class="text-amber-500">Reader</em></h1>
+      </div>
+      <div class="pb-8">
+        <!-- Stats -->
+        <div class="flex gap-3 px-6 lg:px-10 pb-6 overflow-x-auto no-scroll">
+          <div class="shrink-0 bg-cream-100 border border-cream-200 rounded-2xl px-5 py-4">
+            <div class="font-display text-2xl font-bold text-brown-900">12</div>
+            <div class="text-xs text-amber-500 font-medium mt-0.5 tracking-wide">Books read</div>
+          </div>
+          <div class="shrink-0 bg-cream-100 border border-cream-200 rounded-2xl px-5 py-4">
+            <div class="font-display text-2xl font-bold text-brown-900">3,840</div>
+            <div class="text-xs text-amber-500 font-medium mt-0.5 tracking-wide">Pages this year</div>
+          </div>
+          <div class="shrink-0 bg-cream-100 border border-cream-200 rounded-2xl px-5 py-4">
+            <div class="font-display text-2xl font-bold text-brown-900">8</div>
+            <div class="text-xs text-amber-500 font-medium mt-0.5 tracking-wide">Day streak 🔥</div>
+          </div>
+          <div class="shrink-0 bg-cream-100 border border-cream-200 rounded-2xl px-5 py-4">
+            <div class="font-display text-2xl font-bold text-brown-900">4.2h</div>
+            <div class="text-xs text-amber-500 font-medium mt-0.5 tracking-wide">Avg / week</div>
+          </div>
+        </div>
+
+        <!-- Currently Reading -->
+        <div class="mx-6 lg:mx-10 mb-7 bg-gradient-to-br from-brown-800 to-brown-700 rounded-3xl p-5 lg:p-6 flex gap-4 lg:gap-6 items-center shadow-warm relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-52 h-52 rounded-full bg-amber-400/8 -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none"></div>
+          <img class="w-[60px] h-[88px] lg:w-[72px] lg:h-[104px] rounded-md object-cover shadow-[0_6px_20px_rgba(0,0,0,0.4)] shrink-0"
+            src="https://covers.openlibrary.org/b/id/8739161-M.jpg" alt="Currently reading"
+            onerror="this.style.background='linear-gradient(135deg,#8b5e1a,#5c3d1e)';this.removeAttribute('src')"/>
+          <div class="flex-1 min-w-0">
+            <p class="text-[10px] font-bold tracking-[3px] uppercase text-amber-400 mb-1.5">Currently reading</p>
+            <p class="font-display text-base lg:text-lg font-semibold text-cream-50 leading-snug mb-0.5">The Name of the Wind</p>
+            <p class="text-xs text-cream-100/45 mb-3">Patrick Rothfuss</p>
+            <div class="h-[3px] bg-white/10 rounded-full overflow-hidden">
+              <div class="progress-fill h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full" style="width:63%"></div>
+            </div>
+            <p class="text-[11px] text-amber-400 font-semibold mt-1.5">63% complete · ~4 hrs left</p>
+          </div>
+        </div>
+
+        <!-- Recently Added -->
+        <div class="flex items-center justify-between px-6 lg:px-10 mb-3">
+          <h2 class="font-display text-xl font-semibold text-brown-900">Recently added</h2>
+          <button class="text-sm font-medium text-amber-500 hover:text-amber-600 transition-colors" onclick="State.navigate('books')">See all</button>
+        </div>
+        <div class="flex gap-4 px-6 lg:px-10 pb-6 overflow-x-auto no-scroll" id="home-books-row"></div>
+
+        <!-- Recommended -->
+        <div class="flex items-center justify-between px-6 lg:px-10 mb-3">
+          <h2 class="font-display text-xl font-semibold text-brown-900">Recommended for you</h2>
+        </div>
+        <div class="flex gap-4 px-6 lg:px-10 overflow-x-auto no-scroll pb-2" id="home-recommended-row"></div>
+      </div>
+    </div>
+
+    <!-- ╔═══════════════════════════════════╗
+         ║  SCREEN: BOOKS                    ║
+         ╚═══════════════════════════════════╝ -->
+    <div id="screen-books" class="screen absolute inset-0 overflow-y-auto no-scroll bg-cream-50" style="opacity:0;transform:translateY(12px);pointer-events:none">
+      <div class="sticky top-0 z-10 px-6 lg:px-10 pt-12 lg:pt-8 pb-4 bg-gradient-to-b from-cream-100 via-cream-100/90 to-transparent">
+        <p class="text-xs font-bold tracking-[3px] uppercase text-amber-500 mb-1">Library</p>
+        <h1 class="font-display text-3xl lg:text-4xl font-bold text-brown-900">Your <em class="text-amber-500">collection</em></h1>
+      </div>
+      <div class="mx-6 lg:mx-10 mb-5 flex items-center gap-3 bg-cream-100 border-[1.5px] border-cream-200 rounded-2xl px-4 py-3 focus-within:border-amber-400 focus-within:shadow-[0_0_0_3px_rgba(200,151,74,0.1)] transition-all">
+        <svg class="w-4 h-4 text-amber-500/70 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="book-search" type="text" placeholder="Search title or author…"
+          class="flex-1 bg-transparent outline-none text-sm text-brown-900 placeholder-amber-500/40"
+          style="font-family:'DM Sans',sans-serif" oninput="UI.filterBooks(this.value)">
+      </div>
+      <div id="books-grid" class="grid grid-cols-3 lg:grid-cols-5 xl:grid-cols-7 gap-4 lg:gap-5 px-6 lg:px-10 pb-10"></div>
+    </div>
+
+    <!-- ╔═══════════════════════════════════╗
+         ║  SCREEN: FAVORITES                ║
+         ╚═══════════════════════════════════╝ -->
+    <div id="screen-favorites" class="screen absolute inset-0 overflow-y-auto no-scroll bg-cream-50" style="opacity:0;transform:translateY(12px);pointer-events:none">
+      <div class="px-6 lg:px-10 pt-12 lg:pt-8 pb-4">
+        <p class="text-xs font-bold tracking-[3px] uppercase text-amber-500 mb-1">Saved</p>
+        <h1 class="font-display text-3xl lg:text-4xl font-bold text-brown-900">Your <em class="text-amber-500">favorites</em></h1>
+      </div>
+      <div class="flex flex-col items-center justify-center gap-5 py-16 px-8 text-center">
+        <div class="w-20 h-20 bg-cream-100 rounded-full flex items-center justify-center text-4xl border border-cream-200">🔖</div>
+        <h2 class="font-display text-2xl font-semibold text-brown-900">No favorites yet</h2>
+        <p class="text-sm text-amber-500/80 leading-relaxed max-w-xs">Long-press any book to save it here. Your curated shelf awaits.</p>
+        <button onclick="State.navigate('books')"
+          class="bg-gradient-to-r from-amber-400 to-amber-500 text-brown-900 font-semibold text-sm py-3.5 px-8 rounded-2xl shadow-[0_4px_20px_rgba(200,151,74,0.3)] hover:shadow-[0_8px_32px_rgba(200,151,74,0.45)] active:scale-95 transition-all">
+          Browse library
+        </button>
+      </div>
+    </div>
+
+    <!-- ╔═══════════════════════════════════╗
+         ║  SCREEN: PROFILE                  ║
+         ╚═══════════════════════════════════╝ -->
+    <div id="screen-profile" class="screen absolute inset-0 overflow-y-auto no-scroll bg-cream-50" style="opacity:0;transform:translateY(12px);pointer-events:none">
+      <div class="bg-gradient-to-br from-brown-800 to-brown-700 px-6 lg:px-10 pt-14 lg:pt-10 pb-8 flex items-center gap-5 relative overflow-hidden">
+        <div class="absolute bottom-0 right-0 w-64 h-64 rounded-full bg-amber-400/8 translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none"></div>
+        <div id="profile-avatar" class="w-[72px] h-[72px] rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center font-display text-3xl font-bold text-brown-900 shadow-[0_4px_20px_rgba(200,151,74,0.4)] shrink-0">R</div>
+        <div>
+          <p id="profile-name-display"  class="font-display text-2xl lg:text-3xl font-bold text-cream-50">Reader</p>
+          <p id="profile-email-display" class="text-sm text-cream-100/45 mt-0.5">reader@folio.app</p>
+        </div>
+      </div>
+      <!-- Stats row -->
+      <div class="flex mx-6 lg:mx-10 rounded-b-2xl border border-t-0 border-cream-200 divide-x divide-cream-200 bg-cream-50 overflow-hidden">
+        <div class="flex-1 py-4 text-center"><div class="font-display text-2xl font-bold text-brown-900">12</div><div class="text-xs text-amber-500 mt-0.5">Read</div></div>
+        <div class="flex-1 py-4 text-center"><div class="font-display text-2xl font-bold text-brown-900">5</div><div class="text-xs text-amber-500 mt-0.5">Reading</div></div>
+        <div class="flex-1 py-4 text-center"><div class="font-display text-2xl font-bold text-brown-900">24</div><div class="text-xs text-amber-500 mt-0.5">Wishlist</div></div>
+      </div>
+      <div class="px-6 lg:px-10 py-6 flex flex-col gap-1.5">
+        <div class="flex items-center gap-4 p-4 rounded-2xl hover:bg-cream-100 cursor-pointer transition-colors">
+          <div class="w-10 h-10 bg-cream-100 rounded-xl flex items-center justify-center shrink-0"><svg class="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <span class="flex-1 text-sm font-medium text-brown-900">Edit profile</span>
+          <svg class="w-4 h-4 text-amber-400/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+        <div class="flex items-center gap-4 p-4 rounded-2xl hover:bg-cream-100 cursor-pointer transition-colors">
+          <div class="w-10 h-10 bg-cream-100 rounded-xl flex items-center justify-center shrink-0"><svg class="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></div>
+          <span class="flex-1 text-sm font-medium text-brown-900">Reading goals</span>
+          <svg class="w-4 h-4 text-amber-400/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+        <div class="flex items-center gap-4 p-4 rounded-2xl hover:bg-cream-100 cursor-pointer transition-colors">
+          <div class="w-10 h-10 bg-cream-100 rounded-xl flex items-center justify-center shrink-0"><svg class="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+          <span class="flex-1 text-sm font-medium text-brown-900">Notifications</span>
+          <svg class="w-4 h-4 text-amber-400/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+        <div class="flex items-center gap-4 p-4 rounded-2xl hover:bg-red-50 cursor-pointer transition-colors" onclick="State.logout()">
+          <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center shrink-0"><svg class="w-5 h-5 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
+          <span class="flex-1 text-sm font-medium text-red-500">Sign out</span>
+          <svg class="w-4 h-4 text-red-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── MOBILE BOTTOM NAV ─────────────────────────── -->
+    <nav id="bottom-nav" class="absolute bottom-0 left-0 right-0 h-[72px] bg-cream-50/95 backdrop-blur-xl border-t border-cream-200 flex items-center justify-around px-2 pb-2 z-50 lg:hidden" style="display:none!important">
+      <button class="nav-item flex flex-col items-center gap-1 px-4 py-2 border-none bg-transparent cursor-pointer" data-view="home" onclick="State.navigate('home')">
+        <div class="nav-icon-wrap w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200">
+          <svg class="nav-icon w-5 h-5 transition-all duration-200" style="color:rgba(176,125,50,0.4)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <span class="nav-label text-[10px] font-medium transition-all duration-200" style="color:rgba(176,125,50,0.4)">Home</span>
+      </button>
+      <button class="nav-item flex flex-col items-center gap-1 px-4 py-2 border-none bg-transparent cursor-pointer" data-view="books" onclick="State.navigate('books')">
+        <div class="nav-icon-wrap w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200">
+          <svg class="nav-icon w-5 h-5 transition-all duration-200" style="color:rgba(176,125,50,0.4)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
+        <span class="nav-label text-[10px] font-medium transition-all duration-200" style="color:rgba(176,125,50,0.4)">Books</span>
+      </button>
+      <button class="nav-item flex flex-col items-center gap-1 px-4 py-2 border-none bg-transparent cursor-pointer" data-view="favorites" onclick="State.navigate('favorites')">
+        <div class="nav-icon-wrap w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200">
+          <svg class="nav-icon w-5 h-5 transition-all duration-200" style="color:rgba(176,125,50,0.4)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <span class="nav-label text-[10px] font-medium transition-all duration-200" style="color:rgba(176,125,50,0.4)">Saved</span>
+      </button>
+      <button class="nav-item flex flex-col items-center gap-1 px-4 py-2 border-none bg-transparent cursor-pointer" data-view="profile" onclick="State.navigate('profile')">
+        <div class="nav-icon-wrap w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200">
+          <svg class="nav-icon w-5 h-5 transition-all duration-200" style="color:rgba(176,125,50,0.4)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <span class="nav-label text-[10px] font-medium transition-all duration-200" style="color:rgba(176,125,50,0.4)">Profile</span>
+      </button>
+    </nav>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     AUTH MODAL
+════════════════════════════════════════════════════════════ -->
+<div id="auth-modal"
+  class="modal-overlay fixed inset-0 bg-brown-900/75 backdrop-blur-md z-[200] flex items-end lg:items-center justify-center"
+  style="opacity:0;pointer-events:none"
+  onclick="UI.handleModalBackdrop(event)">
+  <div class="modal-sheet bg-cream-50 w-full max-w-md rounded-t-3xl lg:rounded-3xl px-7 pt-2 pb-12 lg:pb-8 shadow-[0_-24px_60px_rgba(30,18,8,0.35)]" style="transform:translateY(100%)">
+    <div class="w-10 h-1 bg-cream-200 rounded-full mx-auto mt-4 mb-7 lg:hidden"></div>
+    <h2 id="modal-title"    class="font-display text-2xl font-semibold text-brown-900 mb-1">Create account</h2>
+    <p  id="modal-subtitle" class="text-sm text-amber-500/80 mb-6">Join thousands of readers on Folio</p>
+
+    <div class="flex bg-cream-100 rounded-xl p-1 mb-6">
+      <button id="tab-signup" onclick="UI.switchTab('signup')"
+        class="modal-tab flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 bg-cream-50 text-brown-900 shadow-warm">Sign up</button>
+      <button id="tab-login"  onclick="UI.switchTab('login')"
+        class="modal-tab flex-1 py-2.5 text-sm font-medium  rounded-lg transition-all duration-200 text-amber-500/50">Sign in</button>
+    </div>
+
+    <div class="flex flex-col gap-4 mb-5">
+      <div id="name-field">
+        <label class="block text-[11px] font-bold tracking-[2px] uppercase text-brown-700/70 mb-2">Full name</label>
+        <input id="auth-name" type="text" placeholder="Your name" autocomplete="name"
+          class="w-full bg-cream-100 border-[1.5px] border-cream-200 rounded-xl px-4 py-3.5 text-sm text-brown-900 outline-none placeholder-amber-500/35 focus:border-amber-400 focus:shadow-[0_0_0_3px_rgba(200,151,74,0.1)] transition-all" style="font-family:'DM Sans',sans-serif">
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold tracking-[2px] uppercase text-brown-700/70 mb-2">Email address</label>
+        <input id="auth-email" type="email" placeholder="you@example.com" autocomplete="email"
+          class="w-full bg-cream-100 border-[1.5px] border-cream-200 rounded-xl px-4 py-3.5 text-sm text-brown-900 outline-none placeholder-amber-500/35 focus:border-amber-400 focus:shadow-[0_0_0_3px_rgba(200,151,74,0.1)] transition-all" style="font-family:'DM Sans',sans-serif">
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold tracking-[2px] uppercase text-brown-700/70 mb-2">Password</label>
+        <input id="auth-password" type="password" placeholder="••••••••" autocomplete="current-password"
+          class="w-full bg-cream-100 border-[1.5px] border-cream-200 rounded-xl px-4 py-3.5 text-sm text-brown-900 outline-none placeholder-amber-500/35 focus:border-amber-400 focus:shadow-[0_0_0_3px_rgba(200,151,74,0.1)] transition-all" style="font-family:'DM Sans',sans-serif">
+      </div>
+    </div>
+
+    <button onclick="State.handleAuth()"
+      class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 text-brown-900 font-semibold py-4 rounded-2xl shadow-[0_6px_24px_rgba(200,151,74,0.3)] hover:shadow-[0_10px_36px_rgba(200,151,74,0.45)] active:scale-[0.98] transition-all duration-150">
+      <span id="auth-btn-label">Create my shelf</span>
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 14 0M13 6l6 6-6 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-24 lg:bottom-8 left-1/2 -translate-x-1/2 bg-brown-800 text-cream-50 text-sm font-medium py-3 px-5 rounded-full z-[300] pointer-events-none opacity-0 translate-y-4 transition-all duration-300 whitespace-nowrap max-w-[300px] text-center"></div>
+<script src="./script.js"></script>
+</body>
+</html>
