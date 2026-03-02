@@ -4,7 +4,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import passport from "passport";
 import session from "express-session";
-import { Pool } from 'pg';
+import pg from 'pg';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import bcrypt from "bcrypt";
@@ -23,11 +23,6 @@ const db = new pg.Pool({
   host: process.env.PG_HOST,
   database: process.env.PG_DB,
   port: process.env.PG_PORT,
-});
-
-
-pool.on('error', (err) => {
-  console.error('Unexpected PG pool error:', err.message);
 });
 
 app.set("view engine", "ejs");
