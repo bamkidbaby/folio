@@ -33,15 +33,15 @@ pool.on('error', (err) => {
 app.set("view engine", "ejs");
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, "Public")));
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-  }),
-);
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET,
+//     resave: false,
+//     saveUninitialized: false,
+//   }),
+// );
 app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.session());
 
 passport.serializeUser((user, done) => done(null, user.id));
 
